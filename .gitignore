@@ -1,0 +1,9 @@
+.DS_Store
+*.userprefs
+**/.DS_Store
+crypto/bin/
+crypto/obj/
+crypto/doc/
+crypto/test/bin/
+crypto/test/obj/
+crypto/test/doc/
