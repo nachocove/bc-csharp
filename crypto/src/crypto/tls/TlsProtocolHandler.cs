@@ -23,6 +23,7 @@ namespace Org.BouncyCastle.Crypto.Tls
 {
     /// <remarks>An implementation of all high level protocols in TLS 1.0.</remarks>
     public class TlsProtocolHandler
+        : TlsProtocol
     {
         /*
         * Our Connection states
@@ -39,8 +40,6 @@ namespace Org.BouncyCastle.Crypto.Tls
         private const short CS_CLIENT_FINISHED_SEND = 10;
         private const short CS_SERVER_CHANGE_CIPHER_SPEC_RECEIVED = 11;
         private const short CS_DONE = 12;
-
-        private static readonly byte[] emptybuf = new byte[0];
 
         private static readonly string TLS_ERROR_MESSAGE = "Internal TLS error, this could be an attack";
 
@@ -69,8 +68,8 @@ namespace Org.BouncyCastle.Crypto.Tls
 
         private TlsClientContextImpl tlsClientContext = null;
         private TlsClient tlsClient = null;
-        private CipherSuite[] offeredCipherSuites = null;
-        private CompressionMethod[] offeredCompressionMethods = null;
+        private int[] offeredCipherSuites = null;
+        private byte[] offeredCompressionMethods = null;
         private TlsKeyExchange keyExchange = null;
         private TlsAuthentication authentication = null;
         private CertificateRequest certificateRequest = null;
@@ -122,15 +121,15 @@ namespace Org.BouncyCastle.Crypto.Tls
         }
 
         internal void ProcessData(
-            ContentType	protocol,
-            byte[]		buf,
-            int			offset,
-            int			len)
+            byte    contentType,
+            byte[]	buf,
+            int		offset,
+            int		len)
         {
             /*
             * Have a look at the protocol type, and add it to the correct queue.
             */
-            switch (protocol)
+            switch (contentType)
             {
                 case ContentType.change_cipher_spec:
                     ProcessChangeCipherSpec(buf, offset, len);
@@ -177,7 +176,7 @@ namespace Org.BouncyCastle.Crypto.Tls
                     byte[] beginning = new byte[4];
                     handshakeQueue.Read(beginning, 0, 4, 0);
                     MemoryStream bis = new MemoryStream(beginning, false);
-                    HandshakeType type = (HandshakeType)TlsUtilities.ReadUint8(bis);
+                    byte handshakeType = TlsUtilities.ReadUint8(bis);
                     int len = TlsUtilities.ReadUint24(bis);
 
                     /*
@@ -197,7 +196,7 @@ namespace Org.BouncyCastle.Crypto.Tls
                          * including, this finished message. [..] Note: [Also,] Hello Request
                          * messages are omitted from handshake hashes.
                          */
-                        switch (type)
+                        switch (handshakeType)
                         {
                             case HandshakeType.hello_request:
                             case HandshakeType.finished:
@@ -211,7 +210,7 @@ namespace Org.BouncyCastle.Crypto.Tls
                         /*
                         * Now, parse the message.
                         */
-                        ProcessHandshakeMessage(type, buf);
+                        ProcessHandshakeMessage(handshakeType, buf);
                         read = true;
                     }
                 }
@@ -219,14 +218,14 @@ namespace Org.BouncyCastle.Crypto.Tls
             while (read);
         }
 
-        private void ProcessHandshakeMessage(HandshakeType type, byte[] buf)
+        private void ProcessHandshakeMessage(byte handshakeType, byte[] buf)
         {
             MemoryStream inStr = new MemoryStream(buf, false);
 
             /*
             * Check the type.
             */
-            switch (type)
+            switch (handshakeType)
             {
                 case HandshakeType.certificate:
                 {
@@ -324,8 +323,8 @@ namespace Org.BouncyCastle.Crypto.Tls
                              * Find out which CipherSuite the server has chosen and check that
                              * it was one of the offered ones.
                              */
-                            CipherSuite selectedCipherSuite = (CipherSuite)TlsUtilities.ReadUint16(inStr);
-                            if (!ArrayContains(offeredCipherSuites, selectedCipherSuite)
+                            int selectedCipherSuite = TlsUtilities.ReadUint16(inStr);
+                            if (!Arrays.Contains(offeredCipherSuites, selectedCipherSuite)
                                 || selectedCipherSuite == CipherSuite.TLS_EMPTY_RENEGOTIATION_INFO_SCSV)
                             {
                                 this.FailWithError(AlertLevel.fatal, AlertDescription.illegal_parameter);
@@ -337,8 +336,8 @@ namespace Org.BouncyCastle.Crypto.Tls
                              * Find out which CompressionMethod the server has chosen and check that
                              * it was one of the offered ones.
                              */
-                            CompressionMethod selectedCompressionMethod = (CompressionMethod)TlsUtilities.ReadUint8(inStr);
-                            if (!ArrayContains(offeredCompressionMethods, selectedCompressionMethod))
+                            byte selectedCompressionMethod = TlsUtilities.ReadUint8(inStr);
+                            if (!Arrays.Contains(offeredCompressionMethods, selectedCompressionMethod))
                             {
                                 this.FailWithError(AlertLevel.fatal, AlertDescription.illegal_parameter);
                             }
@@ -364,53 +363,60 @@ namespace Org.BouncyCastle.Crypto.Tls
                              * containing no extensions.
                              */
 
-                            // ExtensionType -> byte[]
-                            IDictionary serverExtensions = Platform.CreateHashtable();
+                            // Int32 -> byte[]
+                            IDictionary serverExtensions = ReadExtensions(inStr);
 
-                            if (inStr.Position < inStr.Length)
+                            /*
+                             * RFC 3546 2.2 Note that the extended server hello message is only sent in response to an
+                             * extended client hello message.
+                             * 
+                             * However, see RFC 5746 exception below. We always include the SCSV, so an Extended Server
+                             * Hello is always allowed.
+                             */
+                            if (serverExtensions != null)
                             {
-                                // Process extensions from extended server hello
-                                byte[] extBytes = TlsUtilities.ReadOpaque16(inStr);
-
-                                MemoryStream ext = new MemoryStream(extBytes, false);
-                                while (ext.Position < ext.Length)
+                                foreach (int extType in serverExtensions.Keys)
                                 {
-                                    ExtensionType extType = (ExtensionType)TlsUtilities.ReadUint16(ext);
-                                    byte[] extValue = TlsUtilities.ReadOpaque16(ext);
+                                    /*
+                                     * RFC 5746 3.6. Note that sending a "renegotiation_info" extension in response to a
+                                     * ClientHello containing only the SCSV is an explicit exception to the prohibition
+                                     * in RFC 5246, Section 7.4.1.4, on the server sending unsolicited extensions and is
+                                     * only allowed because the client is signaling its willingness to receive the
+                                     * extension via the TLS_EMPTY_RENEGOTIATION_INFO_SCSV SCSV.
+                                     */
+                                    if (ExtensionType.renegotiation_info == extType)
+                                        continue;
 
-                                    // Note: RFC 5746 makes a special case for EXT_RenegotiationInfo
-                                    if (extType != ExtensionType.renegotiation_info
-                                        && !clientExtensions.Contains(extType))
-                                    {
-                                        /*
-                                         * RFC 3546 2.3
-                                         * Note that for all extension types (including those defined in
-                                         * future), the extension type MUST NOT appear in the extended server
-                                         * hello unless the same extension type appeared in the corresponding
-                                         * client hello.  Thus clients MUST abort the handshake if they receive
-                                         * an extension type in the extended server hello that they did not
-                                         * request in the associated (extended) client hello.
-                                         */
-                                        this.FailWithError(AlertLevel.fatal, AlertDescription.unsupported_extension);
-                                    }
+                                    // TODO Add session resumption support
+                                    ///*
+                                    // * RFC 3546 2.3. If [...] the older session is resumed, then the server MUST ignore
+                                    // * extensions appearing in the client hello, and send a server hello containing no
+                                    // * extensions[.]
+                                    // */
+                                    //if (this.resumedSession)
+                                    //{
+                                    //    // TODO[compat-gnutls] GnuTLS test server sends server extensions e.g. ec_point_formats
+                                    //    // TODO[compat-openssl] OpenSSL test server sends server extensions e.g. ec_point_formats
+                                    //    // TODO[compat-polarssl] PolarSSL test server sends server extensions e.g. ec_point_formats
+                                    //    //                    throw new TlsFatalAlert(AlertDescription.illegal_parameter);
+                                    //}
 
-                                    if (serverExtensions.Contains(extType))
-                                    {
-                                        /*
-                                         * RFC 3546 2.3
-                                         * Also note that when multiple extensions of different types are
-                                         * present in the extended client hello or the extended server hello,
-                                         * the extensions may appear in any order. There MUST NOT be more than
-                                         * one extension of the same type.
-                                         */
-                                        this.FailWithError(AlertLevel.fatal, AlertDescription.illegal_parameter);
-                                    }
-
-                                    serverExtensions.Add(extType, extValue);
+                                    /*
+                                     * RFC 5246 7.4.1.4 An extension type MUST NOT appear in the ServerHello unless the
+                                     * same extension type appeared in the corresponding ClientHello. If a client
+                                     * receives an extension type in ServerHello that it did not request in the
+                                     * associated ClientHello, it MUST abort the handshake with an unsupported_extension
+                                     * fatal alert.
+                                     */
+                                    if (null == TlsUtilities.GetExtensionData(clientExtensions, extType))
+                                        throw new TlsFatalAlert(AlertDescription.unsupported_extension);
                                 }
                             }
-
-                            AssertEmpty(inStr);
+                            else
+                            {
+                                // TODO Don't need this eventually...
+                                serverExtensions = Platform.CreateHashtable();
+                            }
 
                             /*
                              * RFC 5746 3.4. When a ServerHello is received, the client MUST check if it
@@ -431,7 +437,7 @@ namespace Org.BouncyCastle.Crypto.Tls
                                     byte[] renegExtValue = (byte[])serverExtensions[ExtensionType.renegotiation_info];
 
                                     if (!Arrays.ConstantTimeAreEqual(renegExtValue,
-                                        CreateRenegotiationInfo(emptybuf)))
+                                        CreateRenegotiationInfo(TlsUtilities.EmptyBytes)))
                                     {
                                         this.FailWithError(AlertLevel.fatal, AlertDescription.handshake_failure);
                                     }
@@ -626,29 +632,11 @@ namespace Org.BouncyCastle.Crypto.Tls
                                 this.FailWithError(AlertLevel.fatal, AlertDescription.handshake_failure);
                             }
 
-                            int numTypes = TlsUtilities.ReadUint8(inStr);
-                            ClientCertificateType[] certificateTypes = new ClientCertificateType[numTypes];
-                            for (int i = 0; i < numTypes; ++i)
-                            {
-                                certificateTypes[i] = (ClientCertificateType)TlsUtilities.ReadUint8(inStr);
-                            }
-
-                            byte[] authorities = TlsUtilities.ReadOpaque16(inStr);
+                            this.certificateRequest = CertificateRequest.Parse(//getContext(),
+                                inStr);
 
                             AssertEmpty(inStr);
 
-                            IList authorityDNs = Platform.CreateArrayList();
-
-                            MemoryStream bis = new MemoryStream(authorities, false);
-                            while (bis.Position < bis.Length)
-                            {
-                                byte[] dnBytes = TlsUtilities.ReadOpaque16(bis);
-                                // TODO Switch to X500Name when available
-                                authorityDNs.Add(X509Name.GetInstance(Asn1Object.FromByteArray(dnBytes)));
-                            }
-
-                            this.certificateRequest = new CertificateRequest(certificateTypes,
-                                authorityDNs);
                             this.keyExchange.ValidateCertificateRequest(this.certificateRequest);
 
                             break;
@@ -836,9 +824,8 @@ namespace Org.BouncyCastle.Crypto.Tls
              * First, generate some random data.
              */
             this.securityParameters = new SecurityParameters();
-            this.securityParameters.clientRandom = new byte[32];
-            random.NextBytes(securityParameters.clientRandom, 4, 28);
-            TlsUtilities.WriteGmtUnixTime(securityParameters.clientRandom, 0);
+            this.securityParameters.clientRandom = CreateRandomBlock(tlsClient.ShouldUseGmtUnixTime(), random,
+                ExporterLabel.client_random);
 
             this.tlsClientContext = new TlsClientContextImpl(random, securityParameters);
             this.tlsClient = tlsClient;
@@ -855,7 +842,7 @@ namespace Org.BouncyCastle.Crypto.Tls
 
             this.offeredCipherSuites = this.tlsClient.GetCipherSuites();
 
-            // ExtensionType -> byte[]
+            // Int32 -> byte[]
             this.clientExtensions = this.tlsClient.GetClientExtensions();
 
             // Cipher Suites (and SCSV)
@@ -899,21 +886,13 @@ namespace Org.BouncyCastle.Crypto.Tls
                 TlsUtilities.WriteUint8((byte)offeredCompressionMethods.Length, outStr);
                 for (int i = 0; i < offeredCompressionMethods.Length; ++i)
                 {
-                    TlsUtilities.WriteUint8((byte)offeredCompressionMethods[i], outStr);
+                    TlsUtilities.WriteUint8(offeredCompressionMethods[i], outStr);
                 }
             }
 
-            // Extensions
             if (clientExtensions != null)
             {
-                MemoryStream ext = new MemoryStream();
-
-                foreach (ExtensionType extType in clientExtensions.Keys)
-                {
-                    WriteExtension(ext, extType, (byte[])clientExtensions[extType]);
-                }
-
-                TlsUtilities.WriteOpaque16(ext.ToArray(), outStr);
+                WriteExtensions(outStr, clientExtensions);
             }
 
             MemoryStream bos = new MemoryStream();
@@ -1009,7 +988,7 @@ namespace Org.BouncyCastle.Crypto.Tls
             }
         }
 
-        private void SafeWriteMessage(ContentType type, byte[] buf, int offset, int len)
+        private void SafeWriteMessage(byte type, byte[] buf, int offset, int len)
         {
             try
             {
@@ -1123,7 +1102,7 @@ namespace Org.BouncyCastle.Crypto.Tls
         * @param alertDescription The exact alert message.
         * @throws IOException If alert was fatal.
         */
-        private void FailWithError(AlertLevel alertLevel, AlertDescription	alertDescription)
+        private void FailWithError(byte alertLevel, byte alertDescription)
         {
             /*
             * Check if the connection is still open.
@@ -1155,11 +1134,9 @@ namespace Org.BouncyCastle.Crypto.Tls
             }
         }
 
-        internal void SendAlert(AlertLevel alertLevel, AlertDescription alertDescription)
+        internal void SendAlert(byte alertLevel, byte alertDescription)
         {
-            byte[] error = new byte[2];
-            error[0] = (byte)alertLevel;
-            error[1] = (byte)alertDescription;
+            byte[] error = new byte[] { alertLevel, alertDescription };
 
             rs.WriteMessage(ContentType.alert, error, 0, 2);
         }
@@ -1183,19 +1160,27 @@ namespace Org.BouncyCastle.Crypto.Tls
             }
         }
 
-        /**
-        * Make sure the Stream is now empty. Fail otherwise.
-        *
-        * @param is The Stream to check.
-        * @throws IOException If is is not empty.
-        */
-        internal void AssertEmpty(
-            MemoryStream inStr)
+        protected static byte[] CreateRandomBlock(bool useGMTUnixTime, SecureRandom random, string asciiLabel)
         {
-            if (inStr.Position < inStr.Length)
+            /*
+             * We use the TLS 1.0 PRF on the SecureRandom output, to guard against RNGs where the raw
+             * output could be used to recover the internal state.
+             */
+            byte[] secret = new byte[32];
+            random.NextBytes(secret);
+
+            byte[] seed = new byte[8];
+            // TODO Use high-resolution timer
+            TlsUtilities.WriteUint64(DateTimeUtilities.CurrentUnixMs(), seed, 0);
+
+            byte[] result = TlsUtilities.PRF(secret, asciiLabel, seed, 32);
+
+            if (useGMTUnixTime)
             {
-                throw new TlsFatalAlert(AlertDescription.decode_error);
+                TlsUtilities.WriteGmtUnixTime(result, 0);
             }
+
+            return result;
         }
 
         internal void Flush()
@@ -1208,37 +1193,11 @@ namespace Org.BouncyCastle.Crypto.Tls
             get { return closed; }
         }
 
-        private static bool ArrayContains(CipherSuite[] a, CipherSuite n)
-        {
-            for (int i = 0; i < a.Length; ++i)
-            {
-                if (a[i] == n)
-                    return true;
-            }
-            return false;
-        }
-
-        private static bool ArrayContains(CompressionMethod[] a, CompressionMethod n)
-        {
-            for (int i = 0; i < a.Length; ++i)
-            {
-                if (a[i] == n)
-                    return true;
-            }
-            return false;
-        }
-
         private static byte[] CreateRenegotiationInfo(byte[] renegotiated_connection)
         {
             MemoryStream buf = new MemoryStream();
             TlsUtilities.WriteOpaque8(renegotiated_connection, buf);
             return buf.ToArray();
-        }
-
-        private static void WriteExtension(Stream output, ExtensionType extType, byte[] extValue)
-        {
-            TlsUtilities.WriteUint16((int)extType, output);
-            TlsUtilities.WriteOpaque16(extValue, output);
         }
     }
 }

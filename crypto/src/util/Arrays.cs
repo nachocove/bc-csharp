@@ -3,26 +3,21 @@ using System.Text;
 
 namespace Org.BouncyCastle.Utilities
 {
-
     /// <summary> General array utilities.</summary>
-    public sealed class Arrays
+    public abstract class Arrays
     {
-        private Arrays()
+        public static bool AreEqual(
+            bool[]  a,
+            bool[]  b)
         {
-        }
+            if (a == b)
+                return true;
 
-		public static bool AreEqual(
-			bool[]  a,
-			bool[]  b)
-		{
-			if (a == b)
-				return true;
-
-			if (a == null || b == null)
-				return false;
+            if (a == null || b == null)
+                return false;
 
             return HaveSameContents(a, b);
-		}
+        }
 
         public static bool AreEqual(
             char[] a,
@@ -44,61 +39,73 @@ namespace Org.BouncyCastle.Utilities
         /// <param name="b">Right side.</param>
         /// <returns>True if equal.</returns>
         public static bool AreEqual(
-			byte[]	a,
-			byte[]	b)
+            byte[]	a,
+            byte[]	b)
         {
-			if (a == b)
-				return true;
+            if (a == b)
+                return true;
 
-			if (a == null || b == null)
-				return false;
+            if (a == null || b == null)
+                return false;
 
-			return HaveSameContents(a, b);
-		}
+            return HaveSameContents(a, b);
+        }
 
-		[Obsolete("Use 'AreEqual' method instead")]
-		public static bool AreSame(
-			byte[]	a,
-			byte[]	b)
-		{
-			return AreEqual(a, b);
-		}
+        [Obsolete("Use 'AreEqual' method instead")]
+        public static bool AreSame(
+            byte[]	a,
+            byte[]	b)
+        {
+            return AreEqual(a, b);
+        }
 
-		/// <summary>
-		/// A constant time equals comparison - does not terminate early if
-		/// test will fail.
-		/// </summary>
-		/// <param name="a">first array</param>
-		/// <param name="b">second array</param>
-		/// <returns>true if arrays equal, false otherwise.</returns>
-		public static bool ConstantTimeAreEqual(
-			byte[]	a,
-			byte[]	b)
-		{
-			int i = a.Length;
-			if (i != b.Length)
-				return false;
-			int cmp = 0;
-			while (i != 0)
-			{
-				--i;
-				cmp |= (a[i] ^ b[i]);
-			}
-			return cmp == 0;
-		}
+        /// <summary>
+        /// A constant time equals comparison - does not terminate early if
+        /// test will fail.
+        /// </summary>
+        /// <param name="a">first array</param>
+        /// <param name="b">second array</param>
+        /// <returns>true if arrays equal, false otherwise.</returns>
+        public static bool ConstantTimeAreEqual(
+            byte[]	a,
+            byte[]	b)
+        {
+            int i = a.Length;
+            if (i != b.Length)
+                return false;
+            int cmp = 0;
+            while (i != 0)
+            {
+                --i;
+                cmp |= (a[i] ^ b[i]);
+            }
+            return cmp == 0;
+        }
 
-		public static bool AreEqual(
-			int[]	a,
-			int[]	b)
-		{
-			if (a == b)
-				return true;
+        public static bool AreEqual(
+            int[]	a,
+            int[]	b)
+        {
+            if (a == b)
+                return true;
 
-			if (a == null || b == null)
-				return false;
+            if (a == null || b == null)
+                return false;
 
-			return HaveSameContents(a, b);
-		}
+            return HaveSameContents(a, b);
+        }
+
+        [CLSCompliantAttribute(false)]
+        public static bool AreEqual(uint[] a, uint[] b)
+        {
+            if (a == b)
+                return true;
+
+            if (a == null || b == null)
+                return false;
+
+            return HaveSameContents(a, b);
+        }
 
         private static bool HaveSameContents(
             bool[] a,
@@ -133,95 +140,272 @@ namespace Org.BouncyCastle.Utilities
         }
 
         private static bool HaveSameContents(
-			byte[]	a,
-			byte[]	b)
-		{
-			int i = a.Length;
-			if (i != b.Length)
-				return false;
-			while (i != 0)
-			{
-				--i;
-				if (a[i] != b[i])
-					return false;
-			}
-			return true;
-		}
+            byte[]	a,
+            byte[]	b)
+        {
+            int i = a.Length;
+            if (i != b.Length)
+                return false;
+            while (i != 0)
+            {
+                --i;
+                if (a[i] != b[i])
+                    return false;
+            }
+            return true;
+        }
 
-		private static bool HaveSameContents(
-			int[]	a,
-			int[]	b)
-		{
-			int i = a.Length;
-			if (i != b.Length)
-				return false;
-			while (i != 0)
-			{
-				--i;
-				if (a[i] != b[i])
-					return false;
-			}
-			return true;
-		}
+        private static bool HaveSameContents(
+            int[]	a,
+            int[]	b)
+        {
+            int i = a.Length;
+            if (i != b.Length)
+                return false;
+            while (i != 0)
+            {
+                --i;
+                if (a[i] != b[i])
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool HaveSameContents(uint[] a, uint[] b)
+        {
+            int i = a.Length;
+            if (i != b.Length)
+                return false;
+            while (i != 0)
+            {
+                --i;
+                if (a[i] != b[i])
+                    return false;
+            }
+            return true;
+        }
 
         public static string ToString(
-			object[] a)
-		{
-			StringBuilder sb = new StringBuilder('[');
-			if (a.Length > 0)
-			{
-				sb.Append(a[0]);
-				for (int index = 1; index < a.Length; ++index)
-				{
-					sb.Append(", ").Append(a[index]);
-				}
-			}
-			sb.Append(']');
-			return sb.ToString();
-		}
+            object[] a)
+        {
+            StringBuilder sb = new StringBuilder('[');
+            if (a.Length > 0)
+            {
+                sb.Append(a[0]);
+                for (int index = 1; index < a.Length; ++index)
+                {
+                    sb.Append(", ").Append(a[index]);
+                }
+            }
+            sb.Append(']');
+            return sb.ToString();
+        }
 
-		public static int GetHashCode(
-			byte[] data)
-		{
-			if (data == null)
-			{
-				return 0;
-			}
+        public static int GetHashCode(byte[] data)
+        {
+            if (data == null)
+            {
+                return 0;
+            }
 
-			int i = data.Length;
-			int hc = i + 1;
+            int i = data.Length;
+            int hc = i + 1;
 
-			while (--i >= 0)
-			{
-				hc *= 257;
-				hc ^= data[i];
-			}
+            while (--i >= 0)
+            {
+                hc *= 257;
+                hc ^= data[i];
+            }
 
-			return hc;
-		}
+            return hc;
+        }
 
-		public static byte[] Clone(
-			byte[] data)
-		{
-			return data == null ? null : (byte[]) data.Clone();
-		}
+        public static int GetHashCode(byte[] data, int off, int len)
+        {
+            if (data == null)
+            {
+                return 0;
+            }
 
-		public static int[] Clone(
-			int[] data)
-		{
-			return data == null ? null : (int[]) data.Clone();
-		}
+            int i = len;
+            int hc = i + 1;
 
-		public static void Fill(
-			byte[]	buf,
-			byte	b)
-		{
-			int i = buf.Length;
-			while (i > 0)
-			{
-				buf[--i] = b;
-			}
-		}
+            while (--i >= 0)
+            {
+                hc *= 257;
+                hc ^= data[off + i];
+            }
+
+            return hc;
+        }
+
+        public static int GetHashCode(int[] data)
+        {
+            if (data == null)
+                return 0;
+
+            int i = data.Length;
+            int hc = i + 1;
+
+            while (--i >= 0)
+            {
+                hc *= 257;
+                hc ^= data[i];
+            }
+
+            return hc;
+        }
+
+        public static int GetHashCode(int[] data, int off, int len)
+        {
+            if (data == null)
+                return 0;
+
+            int i = len;
+            int hc = i + 1;
+
+            while (--i >= 0)
+            {
+                hc *= 257;
+                hc ^= data[off + i];
+            }
+
+            return hc;
+        }
+
+        [CLSCompliantAttribute(false)]
+        public static int GetHashCode(uint[] data)
+        {
+            if (data == null)
+                return 0;
+
+            int i = data.Length;
+            int hc = i + 1;
+
+            while (--i >= 0)
+            {
+                hc *= 257;
+                hc ^= (int)data[i];
+            }
+
+            return hc;
+        }
+
+        [CLSCompliantAttribute(false)]
+        public static int GetHashCode(uint[] data, int off, int len)
+        {
+            if (data == null)
+                return 0;
+
+            int i = len;
+            int hc = i + 1;
+
+            while (--i >= 0)
+            {
+                hc *= 257;
+                hc ^= (int)data[off + i];
+            }
+
+            return hc;
+        }
+
+        public static byte[] Clone(
+            byte[] data)
+        {
+            return data == null ? null : (byte[])data.Clone();
+        }
+
+        public static byte[] Clone(
+            byte[] data, 
+            byte[] existing)
+        {
+            if (data == null)
+            {
+                return null;
+            }
+            if ((existing == null) || (existing.Length != data.Length))
+            {
+                return Clone(data);
+            }
+            Array.Copy(data, 0, existing, 0, existing.Length);
+            return existing;
+        }
+
+        public static int[] Clone(
+            int[] data)
+        {
+            return data == null ? null : (int[])data.Clone();
+        }
+
+        public static long[] Clone(long[] data)
+        {
+            return data == null ? null : (long[])data.Clone();
+        }
+
+        [CLSCompliantAttribute(false)]
+        public static ulong[] Clone(
+            ulong[] data)
+        {
+            return data == null ? null : (ulong[]) data.Clone();
+        }
+
+        [CLSCompliantAttribute(false)]
+        public static ulong[] Clone(
+            ulong[] data, 
+            ulong[] existing)
+        {
+            if (data == null)
+            {
+                return null;
+            }
+            if ((existing == null) || (existing.Length != data.Length))
+            {
+                return Clone(data);
+            }
+            Array.Copy(data, 0, existing, 0, existing.Length);
+            return existing;
+        }
+
+        public static bool Contains(byte[] a, byte n)
+        {
+            for (int i = 0; i < a.Length; ++i)
+            {
+                if (a[i] == n)
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool Contains(short[] a, short n)
+        {
+            for (int i = 0; i < a.Length; ++i)
+            {
+                if (a[i] == n)
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool Contains(int[] a, int n)
+        {
+            for (int i = 0; i < a.Length; ++i)
+            {
+                if (a[i] == n)
+                    return true;
+            }
+            return false;
+        }
+
+        public static void Fill(
+            byte[]	buf,
+            byte	b)
+        {
+            int i = buf.Length;
+            while (i > 0)
+            {
+                buf[--i] = b;
+            }
+        }
 
         public static byte[] Copy(byte[] data, int off, int len)
         {
@@ -229,5 +413,106 @@ namespace Org.BouncyCastle.Utilities
             Array.Copy(data, off, result, 0, len);
             return result;
         }
-	}
+
+        public static byte[] Append(byte[] a, byte b)
+        {
+            if (a == null)
+                return new byte[] { b };
+
+            int length = a.Length;
+            byte[] result = new byte[length + 1];
+            Array.Copy(a, 0, result, 0, length);
+            result[length] = b;
+            return result;
+        }
+
+        public static short[] Append(short[] a, short b)
+        {
+            if (a == null)
+                return new short[] { b };
+
+            int length = a.Length;
+            short[] result = new short[length + 1];
+            Array.Copy(a, 0, result, 0, length);
+            result[length] = b;
+            return result;
+        }
+
+        public static int[] Append(int[] a, int b)
+        {
+            if (a == null)
+                return new int[] { b };
+
+            int length = a.Length;
+            int[] result = new int[length + 1];
+            Array.Copy(a, 0, result, 0, length);
+            result[length] = b;
+            return result;
+        }
+
+        public static byte[] Concatenate(byte[] a, byte[] b)
+        {
+            if (a == null)
+                return Clone(b);
+            if (b == null)
+                return Clone(a);
+
+            byte[] rv = new byte[a.Length + b.Length];
+            Array.Copy(a, 0, rv, 0, a.Length);
+            Array.Copy(b, 0, rv, a.Length, b.Length);
+            return rv;
+        }
+
+        public static byte[] Prepend(byte[] a, byte b)
+        {
+            if (a == null)
+                return new byte[] { b };
+
+            int length = a.Length;
+            byte[] result = new byte[length + 1];
+            Array.Copy(a, 0, result, 1, length);
+            result[0] = b;
+            return result;
+        }
+
+        public static short[] Prepend(short[] a, short b)
+        {
+            if (a == null)
+                return new short[] { b };
+
+            int length = a.Length;
+            short[] result = new short[length + 1];
+            Array.Copy(a, 0, result, 1, length);
+            result[0] = b;
+            return result;
+        }
+
+        public static int[] Prepend(int[] a, int b)
+        {
+            if (a == null)
+                return new int[] { b };
+
+            int length = a.Length;
+            int[] result = new int[length + 1];
+            Array.Copy(a, 0, result, 1, length);
+            result[0] = b;
+            return result;
+        }
+
+        public static byte[] Reverse(byte[] a)
+        {
+            if (a == null)
+                return null;
+
+            int p1 = 0, p2 = a.Length;
+            byte[] result = new byte[p2];
+
+            while (--p2 >= 0)
+            {
+                result[p2] = a[p1++];
+            }
+
+            return result;
+        }
+    }
 }

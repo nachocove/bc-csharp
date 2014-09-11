@@ -15,20 +15,23 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;TRACE;INCLUDE_IDEA;</DefineConstants>
+    <OutputPath>bin\Debug\lib\net20</OutputPath>
+    <IntermediateOutputPath>obj\Debug\lib\net20</IntermediateOutputPath>
+    <DefineConstants>DEBUG;TRACE;INCLUDE_IDEA;STRONG_NAME</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>TRACE;INCLUDE_IDEA;</DefineConstants>
+    <OutputPath>bin\Release\lib\net20</OutputPath>
+    <IntermediateOutputPath>obj\Release\lib\net20</IntermediateOutputPath>
+    <DefineConstants>TRACE;INCLUDE_IDEA;STRONG_NAME</DefineConstants>
     <DocumentationFile>doc\BouncyCastle.xml</DocumentationFile>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -109,7 +112,6 @@
     <Compile Include="src\asn1\DerUTCTime.cs" />
     <Compile Include="src\asn1\DerUTF8String.cs" />
     <Compile Include="src\asn1\DerUniversalString.cs" />
-    <Compile Include="src\asn1\DerUnknownTag.cs" />
     <Compile Include="src\asn1\DerVisibleString.cs" />
     <Compile Include="src\asn1\IAsn1ApplicationSpecificParser.cs" />
     <Compile Include="src\asn1\IAsn1Choice.cs" />
@@ -452,6 +454,7 @@
     <Compile Include="src\asn1\x9\DHDomainParameters.cs" />
     <Compile Include="src\asn1\x9\DHPublicKey.cs" />
     <Compile Include="src\asn1\x9\DHValidationParms.cs" />
+    <Compile Include="src\asn1\x9\ECNamedCurveTable.cs" />
     <Compile Include="src\asn1\x9\KeySpecificInfo.cs" />
     <Compile Include="src\asn1\x9\OtherInfo.cs" />
     <Compile Include="src\asn1\x9\X962NamedCurves.cs" />
@@ -580,7 +583,6 @@
     <Compile Include="src\cms\KeyTransRecipientInfoGenerator.cs" />
     <Compile Include="src\cms\KeyTransRecipientInformation.cs" />
     <Compile Include="src\cms\MacOutputStream.cs" />
-    <Compile Include="src\cms\NullOutputStream.cs" />
     <Compile Include="src\cms\OriginatorId.cs" />
     <Compile Include="src\cms\OriginatorInfoGenerator.cs" />
     <Compile Include="src\cms\OriginatorInformation.cs" />
@@ -662,8 +664,12 @@
     <Compile Include="src\crypto\digests\Sha512Digest.cs" />
     <Compile Include="src\crypto\digests\Sha512tDigest.cs" />
     <Compile Include="src\crypto\digests\ShortenedDigest.cs" />
+    <Compile Include="src\crypto\digests\SkeinDigest.cs" />
+    <Compile Include="src\crypto\digests\SkeinEngine.cs" />
+    <Compile Include="src\crypto\digests\SM3Digest.cs" />
     <Compile Include="src\crypto\digests\TigerDigest.cs" />
     <Compile Include="src\crypto\digests\WhirlpoolDigest.cs" />
+    <Compile Include="src\crypto\ec\CustomNamedCurves.cs" />
     <Compile Include="src\crypto\encodings\ISO9796d1Encoding.cs" />
     <Compile Include="src\crypto\encodings\OaepEncoding.cs" />
     <Compile Include="src\crypto\encodings\Pkcs1Encoding.cs" />
@@ -710,6 +716,7 @@
     <Compile Include="src\crypto\engines\SerpentEngine.cs" />
     <Compile Include="src\crypto\engines\SkipjackEngine.cs" />
     <Compile Include="src\crypto\engines\TEAEngine.cs" />
+    <Compile Include="src\crypto\engines\ThreefishEngine.cs" />
     <Compile Include="src\crypto\engines\TwofishEngine.cs" />
     <Compile Include="src\crypto\engines\VMPCEngine.cs" />
     <Compile Include="src\crypto\engines\VMPCKSA3Engine.cs" />
@@ -755,6 +762,7 @@
     <Compile Include="src\crypto\macs\ISO9797Alg3Mac.cs" />
     <Compile Include="src\crypto\macs\Poly1305.cs" />
     <Compile Include="src\crypto\macs\SipHash.cs" />
+    <Compile Include="src\crypto\macs\SkeinMac.cs" />
     <Compile Include="src\crypto\macs\VMPCMac.cs" />
     <Compile Include="src\crypto\modes\CbcBlockCipher.cs" />
     <Compile Include="src\crypto\modes\CcmBlockCipher.cs" />
@@ -838,6 +846,8 @@
     <Compile Include="src\crypto\parameters\RsaKeyGenerationParameters.cs" />
     <Compile Include="src\crypto\parameters\RsaKeyParameters.cs" />
     <Compile Include="src\crypto\parameters\RsaPrivateCrtKeyParameters.cs" />
+    <Compile Include="src\crypto\parameters\SkeinParameters.cs" />
+    <Compile Include="src\crypto\parameters\TweakableBlockCipherParameters.cs" />
     <Compile Include="src\crypto\prng\CryptoApiRandomGenerator.cs" />
     <Compile Include="src\crypto\prng\DigestRandomGenerator.cs" />
     <Compile Include="src\crypto\prng\IRandomGenerator.cs" />
@@ -859,34 +869,63 @@
     <Compile Include="src\crypto\tls\AlertDescription.cs" />
     <Compile Include="src\crypto\tls\AlertLevel.cs" />
     <Compile Include="src\crypto\tls\AlwaysValidVerifyer.cs" />
+    <Compile Include="src\crypto\tls\BulkCipherAlgorithm.cs" />
     <Compile Include="src\crypto\tls\ByteQueue.cs" />
+    <Compile Include="src\crypto\tls\CertChainType.cs" />
     <Compile Include="src\crypto\tls\Certificate.cs" />
     <Compile Include="src\crypto\tls\CertificateRequest.cs" />
+    <Compile Include="src\crypto\tls\CertificateStatus.cs" />
+    <Compile Include="src\crypto\tls\CertificateStatusRequest.cs" />
+    <Compile Include="src\crypto\tls\CertificateStatusType.cs" />
+    <Compile Include="src\crypto\tls\CertificateUrl.cs" />
+    <Compile Include="src\crypto\tls\ChangeCipherSpec.cs" />
     <Compile Include="src\crypto\tls\CipherSuite.cs" />
+    <Compile Include="src\crypto\tls\CipherType.cs" />
+    <Compile Include="src\crypto\tls\ClientAuthenticationType.cs" />
     <Compile Include="src\crypto\tls\ClientCertificateType.cs" />
     <Compile Include="src\crypto\tls\CombinedHash.cs" />
     <Compile Include="src\crypto\tls\CompressionMethod.cs" />
+    <Compile Include="src\crypto\tls\ConnectionEnd.cs" />
     <Compile Include="src\crypto\tls\ContentType.cs" />
     <Compile Include="src\crypto\tls\DefaultTlsAgreementCredentials.cs" />
     <Compile Include="src\crypto\tls\DefaultTlsCipherFactory.cs" />
     <Compile Include="src\crypto\tls\DefaultTlsClient.cs" />
     <Compile Include="src\crypto\tls\DefaultTlsSignerCredentials.cs" />
     <Compile Include="src\crypto\tls\DigestAlgorithm.cs" />
+    <Compile Include="src\crypto\tls\DigestInputBuffer.cs" />
+    <Compile Include="src\crypto\tls\ECBasisType.cs" />
     <Compile Include="src\crypto\tls\ECCurveType.cs" />
     <Compile Include="src\crypto\tls\ECPointFormat.cs" />
     <Compile Include="src\crypto\tls\EncryptionAlgorithm.cs" />
+    <Compile Include="src\crypto\tls\ExporterLabel.cs" />
     <Compile Include="src\crypto\tls\ExtensionType.cs" />
     <Compile Include="src\crypto\tls\HandshakeType.cs" />
+    <Compile Include="src\crypto\tls\HashAlgorithm.cs" />
+    <Compile Include="src\crypto\tls\HeartbeatMessageType.cs" />
+    <Compile Include="src\crypto\tls\HeartbeatMode.cs" />
     <Compile Include="src\crypto\tls\ICertificateVerifyer.cs" />
     <Compile Include="src\crypto\tls\KeyExchangeAlgorithm.cs" />
     <Compile Include="src\crypto\tls\LegacyTlsAuthentication.cs" />
     <Compile Include="src\crypto\tls\LegacyTlsClient.cs" />
+    <Compile Include="src\crypto\tls\MacAlgorithm.cs" />
+    <Compile Include="src\crypto\tls\MaxFragmentLength.cs" />
     <Compile Include="src\crypto\tls\NamedCurve.cs" />
+    <Compile Include="src\crypto\tls\NameType.cs" />
+    <Compile Include="src\crypto\tls\NewSessionTicket.cs" />
+    <Compile Include="src\crypto\tls\OcspStatusRequest.cs" />
+    <Compile Include="src\crypto\tls\PrfAlgorithm.cs" />
+    <Compile Include="src\crypto\tls\ProtocolVersion.cs" />
     <Compile Include="src\crypto\tls\PskTlsClient.cs" />
     <Compile Include="src\crypto\tls\RecordStream.cs" />
     <Compile Include="src\crypto\tls\SecurityParameters.cs" />
+    <Compile Include="src\crypto\tls\SessionParameters.cs" />
+    <Compile Include="src\crypto\tls\SignatureAlgorithm.cs" />
+    <Compile Include="src\crypto\tls\SignatureAndHashAlgorithm.cs" />
+    <Compile Include="src\crypto\tls\SignerInputBuffer.cs" />
     <Compile Include="src\crypto\tls\SrpTlsClient.cs" />
+    <Compile Include="src\crypto\tls\SrtpProtectionProfile.cs" />
     <Compile Include="src\crypto\tls\Ssl3Mac.cs" />
+    <Compile Include="src\crypto\tls\SupplementalDataType.cs" />
     <Compile Include="src\crypto\tls\TlsAgreementCredentials.cs" />
     <Compile Include="src\crypto\tls\TlsAuthentication.cs" />
     <Compile Include="src\crypto\tls\TlsBlockCipher.cs" />
@@ -896,6 +935,7 @@
     <Compile Include="src\crypto\tls\TlsClientContext.cs" />
     <Compile Include="src\crypto\tls\TlsClientContextImpl.cs" />
     <Compile Include="src\crypto\tls\TlsCompression.cs" />
+    <Compile Include="src\crypto\tls\TlsContext.cs" />
     <Compile Include="src\crypto\tls\TlsCredentials.cs" />
     <Compile Include="src\crypto\tls\TlsDHKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsDHUtilities.cs" />
@@ -903,45 +943,120 @@
     <Compile Include="src\crypto\tls\TlsDheKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsDsaSigner.cs" />
     <Compile Include="src\crypto\tls\TlsDssSigner.cs" />
+    <Compile Include="src\crypto\tls\TlsEccUtilities.cs" />
     <Compile Include="src\crypto\tls\TlsECDHKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsECDheKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsECDsaSigner.cs" />
-    <Compile Include="src\crypto\tls\TlsException.cs" />
     <Compile Include="src\crypto\tls\TlsFatalAlert.cs" />
     <Compile Include="src\crypto\tls\TlsKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsMac.cs" />
     <Compile Include="src\crypto\tls\TlsNullCipher.cs" />
     <Compile Include="src\crypto\tls\TlsNullCompression.cs" />
+    <Compile Include="src\crypto\tls\TlsPeer.cs" />
+    <Compile Include="src\crypto\tls\TlsProtocol.cs" />
     <Compile Include="src\crypto\tls\TlsProtocolHandler.cs" />
     <Compile Include="src\crypto\tls\TlsPskIdentity.cs" />
     <Compile Include="src\crypto\tls\TlsPskKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsRsaKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsRsaSigner.cs" />
     <Compile Include="src\crypto\tls\TlsRsaUtilities.cs" />
+    <Compile Include="src\crypto\tls\TlsSession.cs" />
     <Compile Include="src\crypto\tls\TlsSigner.cs" />
     <Compile Include="src\crypto\tls\TlsSignerCredentials.cs" />
     <Compile Include="src\crypto\tls\TlsSrpKeyExchange.cs" />
     <Compile Include="src\crypto\tls\TlsStream.cs" />
     <Compile Include="src\crypto\tls\TlsStreamCipher.cs" />
     <Compile Include="src\crypto\tls\TlsUtilities.cs" />
+    <Compile Include="src\crypto\tls\UrlAndHash.cs" />
+    <Compile Include="src\crypto\tls\UserMappingType.cs" />
     <Compile Include="src\crypto\util\Pack.cs" />
     <Compile Include="src\math\BigInteger.cs" />
     <Compile Include="src\math\ec\ECAlgorithms.cs" />
     <Compile Include="src\math\ec\ECCurve.cs" />
     <Compile Include="src\math\ec\ECFieldElement.cs" />
     <Compile Include="src\math\ec\ECPoint.cs" />
-    <Compile Include="src\math\ec\IntArray.cs" />
+    <Compile Include="src\math\ec\ECPointMap.cs" />
+    <Compile Include="src\math\ec\LongArray.cs" />
+    <Compile Include="src\math\ec\Mod.cs" />
+    <Compile Include="src\math\ec\Nat.cs" />
+    <Compile Include="src\math\ec\ScaleXPointMap.cs" />
+    <Compile Include="src\math\ec\ScaleYPointMap.cs" />
     <Compile Include="src\math\ec\abc\SimpleBigDecimal.cs" />
     <Compile Include="src\math\ec\abc\Tnaf.cs" />
     <Compile Include="src\math\ec\abc\ZTauElement.cs" />
+    <Compile Include="src\math\ec\custom\djb\Curve25519.cs" />
+    <Compile Include="src\math\ec\custom\djb\Curve25519Field.cs" />
+    <Compile Include="src\math\ec\custom\djb\Curve25519FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\djb\Curve25519Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\Nat192.cs" />
+    <Compile Include="src\math\ec\custom\sec\Nat224.cs" />
+    <Compile Include="src\math\ec\custom\sec\Nat256.cs" />
+    <Compile Include="src\math\ec\custom\sec\Nat384.cs" />
+    <Compile Include="src\math\ec\custom\sec\Nat512.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192K1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192K1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192K1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192K1Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192R1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192R1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192R1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP192R1Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224K1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224K1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224K1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224K1Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224R1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224R1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224R1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP224R1Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256K1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256K1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256K1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256K1Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256R1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256R1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256R1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP256R1Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP384R1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP384R1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP384R1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP384R1Point.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP521R1Curve.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP521R1Field.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP521R1FieldElement.cs" />
+    <Compile Include="src\math\ec\custom\sec\SecP521R1Point.cs" />
+    <Compile Include="src\math\ec\endo\ECEndomorphism.cs" />
+    <Compile Include="src\math\ec\endo\GlvEndomorphism.cs" />
+    <Compile Include="src\math\ec\endo\GlvTypeBEndomorphism.cs" />
+    <Compile Include="src\math\ec\endo\GlvTypeBParameters.cs" />
+    <Compile Include="src\math\ec\multiplier\AbstractECMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\DoubleAddMultiplier.cs" />
     <Compile Include="src\math\ec\multiplier\ECMultiplier.cs" />
-    <Compile Include="src\math\ec\multiplier\FpNafMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\FixedPointCombMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\FixedPointPreCompInfo.cs" />
+    <Compile Include="src\math\ec\multiplier\FixedPointUtilities.cs" />
+    <Compile Include="src\math\ec\multiplier\GlvMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\MixedNafR2LMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\MontgomeryLadderMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\NafL2RMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\NafR2LMultiplier.cs" />
     <Compile Include="src\math\ec\multiplier\PreCompInfo.cs" />
     <Compile Include="src\math\ec\multiplier\ReferenceMultiplier.cs" />
-    <Compile Include="src\math\ec\multiplier\WNafMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\WNafL2RMultiplier.cs" />
     <Compile Include="src\math\ec\multiplier\WNafPreCompInfo.cs" />
+    <Compile Include="src\math\ec\multiplier\WNafUtilities.cs" />
     <Compile Include="src\math\ec\multiplier\WTauNafMultiplier.cs" />
     <Compile Include="src\math\ec\multiplier\WTauNafPreCompInfo.cs" />
+    <Compile Include="src\math\ec\multiplier\ZSignedDigitL2RMultiplier.cs" />
+    <Compile Include="src\math\ec\multiplier\ZSignedDigitR2LMultiplier.cs" />
+    <Compile Include="src\math\field\FiniteFields.cs" />
+    <Compile Include="src\math\field\GF2Polynomial.cs" />
+    <Compile Include="src\math\field\GenericPolynomialExtensionField.cs" />
+    <Compile Include="src\math\field\IExtensionField.cs" />
+    <Compile Include="src\math\field\IFiniteField.cs" />
+    <Compile Include="src\math\field\IPolynomial.cs" />
+    <Compile Include="src\math\field\IPolynomialExtensionField.cs" />
+    <Compile Include="src\math\field\PrimeField.cs" />
     <Compile Include="src\ocsp\BasicOCSPResp.cs" />
     <Compile Include="src\ocsp\BasicOCSPRespGenerator.cs" />
     <Compile Include="src\ocsp\CertificateID.cs" />
@@ -1082,6 +1197,9 @@
     <Compile Include="src\util\Arrays.cs" />
     <Compile Include="src\util\BigIntegers.cs" />
     <Compile Include="src\util\Enums.cs" />
+    <Compile Include="src\util\IMemoable.cs" />
+    <Compile Include="src\util\Integers.cs" />
+    <Compile Include="src\util\MemoableResetException.cs" />
     <Compile Include="src\util\Platform.cs" />
     <Compile Include="src\util\Strings.cs" />
     <Compile Include="src\util\collections\CollectionUtilities.cs" />
@@ -1111,6 +1229,7 @@
     <Compile Include="src\util\encoders\UrlBase64Encoder.cs" />
     <Compile Include="src\util\io\BaseInputStream.cs" />
     <Compile Include="src\util\io\BaseOutputStream.cs" />
+    <Compile Include="src\util\io\NullOutputStream.cs" />
     <Compile Include="src\util\io\PushbackStream.cs" />
     <Compile Include="src\util\io\StreamOverflowException.cs" />
     <Compile Include="src\util\io\Streams.cs" />

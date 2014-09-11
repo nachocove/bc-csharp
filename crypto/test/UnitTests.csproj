@@ -138,6 +138,7 @@
     <Compile Include="src\crypto\examples\DESExample.cs" />
     <Compile Include="src\crypto\io\test\AllTests.cs" />
     <Compile Include="src\crypto\io\test\CipherStreamTest.cs" />
+    <Compile Include="src\crypto\test\AeadTestUtilities.cs" />
     <Compile Include="src\crypto\test\AESFastTest.cs" />
     <Compile Include="src\crypto\test\AESLightTest.cs" />
     <Compile Include="src\crypto\test\AESTest.cs" />
@@ -234,6 +235,12 @@
     <Compile Include="src\crypto\test\SHA512HMacTest.cs" />
     <Compile Include="src\crypto\test\SHA512t224DigestTest.cs" />
     <Compile Include="src\crypto\test\SHA512t256DigestTest.cs" />
+    <Compile Include="src\crypto\test\SM3DigestTest.cs" />
+    <Compile Include="src\crypto\test\SkeinDigestTest.cs" />
+    <Compile Include="src\crypto\test\SkeinMacTest.cs" />
+    <Compile Include="src\crypto\test\Threefish1024Test.cs" />
+    <Compile Include="src\crypto\test\Threefish256Test.cs" />
+    <Compile Include="src\crypto\test\Threefish512Test.cs" />
     <Compile Include="src\crypto\test\SRP6Test.cs" />
     <Compile Include="src\crypto\test\Salsa20Test.cs" />
     <Compile Include="src\crypto\test\SerpentTest.cs" />
@@ -251,6 +258,7 @@
     <Compile Include="src\crypto\test\XSalsa20Test.cs" />
     <Compile Include="src\crypto\test\XTEATest.cs" />
     <Compile Include="src\math\ec\test\AllTests.cs" />
+    <Compile Include="src\math\ec\test\ECAlgorithmsTest.cs" />
     <Compile Include="src\math\ec\test\ECPointPerformanceTest.cs" />
     <Compile Include="src\math\ec\test\ECPointTest.cs" />
     <Compile Include="src\math\ec\test\F2mProofer.cs" />
@@ -279,6 +287,7 @@
     <Compile Include="src\openpgp\test\PGPCompressionTest.cs" />
     <Compile Include="src\openpgp\test\PGPDSAElGamalTest.cs" />
     <Compile Include="src\openpgp\test\PGPDSATest.cs" />
+    <Compile Include="src\openpgp\test\PGPNoPrivateKeyTest.cs" />
     <Compile Include="src\openpgp\test\PGPPBETest.cs" />
     <Compile Include="src\openpgp\test\PGPPacketTest.cs" />
     <Compile Include="src\openpgp\test\PGPRSATest.cs" />

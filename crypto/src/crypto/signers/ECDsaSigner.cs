@@ -1,6 +1,7 @@
 using System;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Math.EC;
+using Org.BouncyCastle.Math.EC.Multiplier;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
@@ -14,44 +15,42 @@ namespace Org.BouncyCastle.Crypto.Signers
     public class ECDsaSigner
         : IDsa
     {
-        private ECKeyParameters key;
-        private SecureRandom random;
+        protected ECKeyParameters key = null;
+        protected SecureRandom random = null;
 
-        public string AlgorithmName
+        public virtual string AlgorithmName
         {
             get { return "ECDSA"; }
         }
 
-        public void Init(
-            bool				forSigning,
-            ICipherParameters	parameters)
+        public virtual void Init(bool forSigning, ICipherParameters parameters)
         {
+            SecureRandom providedRandom = null;
+
             if (forSigning)
             {
                 if (parameters is ParametersWithRandom)
                 {
-                    ParametersWithRandom rParam = (ParametersWithRandom) parameters;
+                    ParametersWithRandom rParam = (ParametersWithRandom)parameters;
 
-                    this.random = rParam.Random;
+                    providedRandom = rParam.Random;
                     parameters = rParam.Parameters;
-                }
-                else
-                {
-                    this.random = new SecureRandom();
                 }
 
                 if (!(parameters is ECPrivateKeyParameters))
                     throw new InvalidKeyException("EC private key required for signing");
 
-                this.key = (ECPrivateKeyParameters) parameters;
+                this.key = (ECPrivateKeyParameters)parameters;
             }
             else
             {
                 if (!(parameters is ECPublicKeyParameters))
                     throw new InvalidKeyException("EC public key required for verification");
 
-                this.key = (ECPublicKeyParameters) parameters;
+                this.key = (ECPublicKeyParameters)parameters;
             }
+
+            this.random = InitSecureRandom(forSigning, providedRandom);
         }
 
         // 5.3 pg 28
@@ -62,20 +61,21 @@ namespace Org.BouncyCastle.Crypto.Signers
          *
          * @param message the message that will be verified later.
          */
-        public BigInteger[] GenerateSignature(
-            byte[] message)
+        public virtual BigInteger[] GenerateSignature(byte[] message)
         {
-            BigInteger n = key.Parameters.N;
-            BigInteger e = calculateE(n, message);
+            ECDomainParameters ec = key.Parameters;
+            BigInteger n = ec.N;
+            BigInteger e = CalculateE(n, message);
+            BigInteger d = ((ECPrivateKeyParameters)key).D;
 
-            BigInteger r = null;
-            BigInteger s = null;
+            BigInteger r, s;
+
+            ECMultiplier basePointMultiplier = CreateBasePointMultiplier();
 
             // 5.3.2
             do // Generate s
             {
-                BigInteger k = null;
-
+                BigInteger k;
                 do // Generate r
                 {
                     do
@@ -84,18 +84,14 @@ namespace Org.BouncyCastle.Crypto.Signers
                     }
                     while (k.SignValue == 0 || k.CompareTo(n) >= 0);
 
-                    ECPoint p = key.Parameters.G.Multiply(k);
+                    ECPoint p = basePointMultiplier.Multiply(ec.G, k).Normalize();
 
                     // 5.3.3
-                    BigInteger x = p.X.ToBigInteger();
-
-                    r = x.Mod(n);
+                    r = p.AffineXCoord.ToBigInteger().Mod(n);
                 }
                 while (r.SignValue == 0);
 
-                BigInteger d = ((ECPrivateKeyParameters)key).D;
-
-                s = k.ModInverse(n).Multiply(e.Add(d.Multiply(r).Mod(n))).Mod(n);
+                s = k.ModInverse(n).Multiply(e.Add(d.Multiply(r))).Mod(n);
             }
             while (s.SignValue == 0);
 
@@ -108,10 +104,7 @@ namespace Org.BouncyCastle.Crypto.Signers
          * the passed in message (for standard DSA the message should be
          * a SHA-1 hash of the real message to be verified).
          */
-        public bool VerifySignature(
-            byte[]		message,
-            BigInteger	r,
-            BigInteger	s)
+        public virtual bool VerifySignature(byte[] message, BigInteger r, BigInteger s)
         {
             BigInteger n = key.Parameters.N;
 
@@ -122,7 +115,7 @@ namespace Org.BouncyCastle.Crypto.Signers
                 return false;
             }
 
-            BigInteger e = calculateE(n, message);
+            BigInteger e = CalculateE(n, message);
             BigInteger c = s.ModInverse(n);
 
             BigInteger u1 = e.Multiply(c).Mod(n);
@@ -131,19 +124,17 @@ namespace Org.BouncyCastle.Crypto.Signers
             ECPoint G = key.Parameters.G;
             ECPoint Q = ((ECPublicKeyParameters) key).Q;
 
-            ECPoint point = ECAlgorithms.SumOfTwoMultiplies(G, u1, Q, u2);
+            ECPoint point = ECAlgorithms.SumOfTwoMultiplies(G, u1, Q, u2).Normalize();
 
             if (point.IsInfinity)
                 return false;
 
-            BigInteger v = point.X.ToBigInteger().Mod(n);
+            BigInteger v = point.AffineXCoord.ToBigInteger().Mod(n);
 
             return v.Equals(r);
         }
 
-        private BigInteger calculateE(
-            BigInteger	n,
-            byte[]		message)
+        protected virtual BigInteger CalculateE(BigInteger n, byte[] message)
         {
             int messageBitLength = message.Length * 8;
             BigInteger trunc = new BigInteger(1, message);
@@ -154,6 +145,16 @@ namespace Org.BouncyCastle.Crypto.Signers
             }
 
             return trunc;
+        }
+
+        protected virtual ECMultiplier CreateBasePointMultiplier()
+        {
+            return new FixedPointCombMultiplier();
+        }
+
+        protected virtual SecureRandom InitSecureRandom(bool needed, SecureRandom provided)
+        {
+            return !needed ? null : (provided != null) ? provided : new SecureRandom();
         }
     }
 }

@@ -362,8 +362,8 @@ namespace Org.BouncyCastle.Pkcs
 
                                 foreach (Asn1Sequence sq in b.BagAttributes)
                                 {
-                                    DerObjectIdentifier aOid = (DerObjectIdentifier) sq[0];
-                                    Asn1Set attrSet = (Asn1Set) sq[1];
+                                    DerObjectIdentifier aOid = DerObjectIdentifier.GetInstance(sq[0]);
+                                    Asn1Set attrSet = Asn1Set.GetInstance(sq[1]);
                                     Asn1Encodable attr = null;
 
                                     if (attrSet.Count > 0)
@@ -450,8 +450,8 @@ namespace Org.BouncyCastle.Pkcs
                 {
                     foreach (Asn1Sequence sq in b.BagAttributes)
                     {
-                        DerObjectIdentifier aOid = (DerObjectIdentifier) sq[0];
-                        Asn1Set attrSet = (Asn1Set) sq[1];
+                        DerObjectIdentifier aOid = DerObjectIdentifier.GetInstance(sq[0]);
+                        Asn1Set attrSet = Asn1Set.GetInstance(sq[1]);
 
                         if (attrSet.Count > 0)
                         {
@@ -1132,8 +1132,7 @@ namespace Org.BouncyCastle.Pkcs
 
             IMac mac = (IMac) PbeUtilities.CreateEngine(oid);
             mac.Init(cipherParams);
-            mac.BlockUpdate(data, 0, data.Length);
-            return MacUtilities.DoFinal(mac);
+            return MacUtilities.DoFinal(mac, data);
         }
 
         private static byte[] CryptPbeData(
